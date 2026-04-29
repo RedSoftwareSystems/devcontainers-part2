@@ -1,0 +1,17 @@
+version: 2
+updates:
+  # Watch the Dockerfile FROM directive and devcontainer.json feature versions.
+  # Major version bumps are suppressed — they stay deliberate engineering decisions.
+  - package-ecosystem: docker
+    directory: /.devcontainer
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Standard npm dependency updates.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly

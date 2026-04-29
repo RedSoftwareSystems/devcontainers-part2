@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Dev Container and run tests
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: ghcr.io/${{ github.repository }}/devcontainer
+          # Pull the previous image as a layer cache — unchanged layers are reused,
+          # dramatically reducing build time on subsequent runs.
+          cacheFrom: ghcr.io/${{ github.repository }}/devcontainer
+          # This is the same command developers run locally. No translation required.
+          runCmd: npm test
+
+      # Only publish the validated image on pushes to main.
+      # PR builds warm the cache but do not push.
+      - name: Push SHA-tagged image to GHCR
+        if: github.ref == 'refs/heads/main' && success()
+        run: |
+          docker tag \
+            ghcr.io/${{ github.repository }}/devcontainer:latest \
+            ghcr.io/${{ github.repository }}/devcontainer:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository }}/devcontainer:latest
+          docker push ghcr.io/${{ github.repository }}/devcontainer:${{ github.sha }}

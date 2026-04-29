@@ -1,0 +1,88 @@
+{
+  "name": "Full-Stack Dev",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": "true"
+    },
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "helm": "latest",
+      "minikube": "none"
+    },
+    "ghcr.io/devcontainers/features/aws-cli:1": {
+      "version": "latest"
+    }
+  },
+
+  "containerEnv": {
+    "TZ": "UTC",
+    "NODE_ENV": "development"
+  },
+
+  "remoteEnv": {
+    "API_BASE_URL": "${localEnv:API_BASE_URL}",
+    "INTERNAL_API_KEY": "${localEnv:INTERNAL_API_KEY}",
+    "SSH_AUTH_SOCK": "/ssh-agent"
+  },
+
+  "workspaceFolder": "/workspace",
+
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+    "source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent,type=bind",
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached,readonly"
+  ],
+
+  "initializeCommand": {
+    "check-docker": "docker info > /dev/null 2>&1"
+  },
+
+  "onCreateCommand": "npm config set fund false --global && npm config set update-notifier false --global",
+
+  "updateContentCommand": "npm install",
+
+  "postCreateCommand": "bash scripts/post-create.sh",
+
+  "postStartCommand": "echo '✅ Dev container started — run npm run dev to launch the API.'",
+
+  "postAttachCommand": "echo '👋 Attached. Workspace: /workspace | API: http://localhost:3000'",
+
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+
+  "forwardPorts": [3000, 5432, 6379],
+
+  "portsAttributes": {
+    "3000": { "label": "App Server",  "onAutoForward": "notify" },
+    "5432": { "label": "PostgreSQL",  "onAutoForward": "silent" },
+    "6379": { "label": "Redis",       "onAutoForward": "silent" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "ms-azuretools.vscode-docker",
+        "ms-kubernetes-tools.vscode-kubernetes-tools"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    }
+  },
+
+  "remoteUser": "vscode"
+}
