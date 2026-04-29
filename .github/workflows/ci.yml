@@ -24,13 +24,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Compute lowercase image name
+        id: image_name
+        run: echo "value=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')/devcontainer" >> $GITHUB_OUTPUT
+
       - name: Build Dev Container and run tests
         uses: devcontainers/ci@v0.3
         with:
-          imageName: ghcr.io/${{ github.repository }}/devcontainer
+          imageName: ${{ steps.image_name.outputs.value }}
           # Pull the previous image as a layer cache — unchanged layers are reused,
           # dramatically reducing build time on subsequent runs.
-          cacheFrom: ghcr.io/${{ github.repository }}/devcontainer
+          cacheFrom: ${{ steps.image_name.outputs.value }}
           # This is the same command developers run locally. No translation required.
           runCmd: npm test
 
@@ -40,7 +44,7 @@ jobs:
         if: github.ref == 'refs/heads/main' && success()
         run: |
           docker tag \
-            ghcr.io/${{ github.repository }}/devcontainer:latest \
-            ghcr.io/${{ github.repository }}/devcontainer:${{ github.sha }}
-          docker push ghcr.io/${{ github.repository }}/devcontainer:latest
-          docker push ghcr.io/${{ github.repository }}/devcontainer:${{ github.sha }}
+            ${{ steps.image_name.outputs.value }}:latest \
+            ${{ steps.image_name.outputs.value }}:${{ github.sha }}
+          docker push ${{ steps.image_name.outputs.value }}:latest
+          docker push ${{ steps.image_name.outputs.value }}:${{ github.sha }}
