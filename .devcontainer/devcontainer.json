@@ -4,17 +4,9 @@
     "dockerfile": "Dockerfile"
   },
 
-  // Required for Docker-in-Docker on cgroupv2 hosts (Ubuntu 22.04+, GitHub Actions ubuntu-latest).
-  // Mounts the host cgroup namespace into the container so the inner dockerd can manage cgroups.
-  "runArgs": ["--cgroupns=host"],
-
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "24"
-    },
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "version": "latest",
-      "enableNonRootDocker": "true"
     },
     "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
       "version": "latest",
