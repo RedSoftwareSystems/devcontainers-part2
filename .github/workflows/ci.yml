@@ -33,13 +33,23 @@ jobs:
         id: image_name
         run: echo "value=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')/devcontainer" >> $GITHUB_OUTPUT
 
+      - name: Warm layer cache (skip on first run when image does not exist yet)
+        id: cache
+        run: |
+          IMAGE="${{ steps.image_name.outputs.value }}"
+          if docker pull "${IMAGE}:latest" 2>/dev/null; then
+            echo "from=${IMAGE}" >> $GITHUB_OUTPUT
+          else
+            echo "from=" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build Dev Container and run tests
         uses: devcontainers/ci@v0.3
         with:
           imageName: ${{ steps.image_name.outputs.value }}
-          # Pull the previous image as a layer cache — unchanged layers are reused,
-          # dramatically reducing build time on subsequent runs.
-          cacheFrom: ${{ steps.image_name.outputs.value }}
+          # Non-empty only after the first successful push; BuildKit skips --cache-from
+          # when this is blank, avoiding the "not found" hard error introduced in BuildKit 0.12.
+          cacheFrom: ${{ steps.cache.outputs.from }}
           # This is the same command developers run locally. No translation required.
           runCmd: npm test
 
